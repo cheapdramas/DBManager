@@ -56,7 +56,7 @@ class RouteHelpersFuncs():
 			await conn.commit()
 
 			await cursor.close()
-
+			await conn.close()
 
 
 

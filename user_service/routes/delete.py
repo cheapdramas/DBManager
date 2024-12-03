@@ -7,7 +7,7 @@ router = APIRouter()
 
 @router.delete('/user')
 async def delete_user_route(user_id:str):
-	await delete_user
+	await RouteHelpersFuncs().delete_user_from_db(user_id)
 
 
 

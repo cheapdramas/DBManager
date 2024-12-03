@@ -18,7 +18,6 @@ async def getting_users_route():
 
 @router.get('/user')
 async def get_user_info_route(user_id:str):
-
 	return await RouteHelpersFuncs().get_user_info(user_id)
 
 
@@ -47,6 +46,7 @@ class RouteHelpersFuncs():
 			await cursor.execute('SELECT * FROM users')
 			result = await cursor.fetchall()
 			await cursor.close()
+			await conn.close()
 			return result
 		
 	@staticmethod
@@ -65,5 +65,7 @@ class RouteHelpersFuncs():
 			)
 			result = await cursor.fetchone()
 			await cursor.close()
+			await conn.close()
 			return result
+	
 	
