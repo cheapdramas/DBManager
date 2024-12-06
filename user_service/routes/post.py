@@ -1,6 +1,7 @@
-from fastapi import APIRouter,HTTPException
-from models.user import UserRegister,User
 import psycopg
+import bcrypt
+from fastapi import APIRouter,HTTPException
+from models.user import UserRegister,User,UserLogin
 from config import DatabaseConfig
 
 
@@ -16,6 +17,9 @@ async def register_user_route(user_info:UserRegister):
 	except Exception as e:
 		raise HTTPException(400,detail=str(e))
 		
+@router.post('/login')
+async def login_user_route(login_info:UserLogin):
+	pass
 
 
 
@@ -57,7 +61,28 @@ class RouteHelpersFuncs():
 
 			await cursor.close()
 			await conn.close()
+	#NOT FINISHED
+	@staticmethod
+	async def login_user(login_info:UserLogin):
+		async with await RouteHelpersFuncs().connect_to_db() as conn:
+			sql_query_pw = """
+				SELECT password FROM users WHERE login=%s
+			"""
+			cursor = conn.cursor()
+			await cursor.execute(sql_query_pw,params=(login_info.login))
+			pw_from_db=await cursor.fetchone()
+			pw_from_db:bytes =pw_from_db[0]
+			if pw_from_db == None:
+				raise HTTPException(status_code=404,detail='User not found')
+			if not bcrypt.checkpw(login_info.password.encode(),pw_from_db):
+				raise HTTPException(status_code=404,detail='User not found(wrong password)')
 
+			
+
+
+			await cursor.close
+			await conn.close
+		
 
 
 
