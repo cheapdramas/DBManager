@@ -29,14 +29,14 @@ def RouteHelpersFuncs(): #proxy function for accessing class that i wrote below 
 	return RouteHelpersFuncs()
 class RouteHelpersFuncs():
 	@staticmethod
-	async def connect_to_db() -> psycopg.connection_async.AsyncConnection:
+	async def connect_to_db(**kwargs) -> psycopg.connection_async.AsyncConnection:
 		conninfo = f"""
 			host={DatabaseConfig.host} 
 			dbname={DatabaseConfig.database} 
 			user={DatabaseConfig.user} 
 			password={DatabaseConfig.password} 
 		"""
-		connection = await psycopg.AsyncConnection.connect(conninfo=conninfo)
+		connection = await psycopg.AsyncConnection.connect(conninfo=conninfo,**kwargs)
 		return connection
 	@staticmethod
 	async def add_user(user_info:UserRegister):

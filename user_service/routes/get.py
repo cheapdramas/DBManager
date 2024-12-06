@@ -40,10 +40,10 @@ class RouteHelpersFuncs():
 
 	@staticmethod
 	async def get_all_users():
-		async with await RouteHelpersFuncs.connect_to_db() as conn:
+		async with await RouteHelpersFuncs.connect_to_db(row_factory=dict_row) as conn:
 			cursor = conn.cursor()
 
-			await cursor.execute('SELECT * FROM users')
+			await cursor.execute('SELECT id,login,name,email FROM users')
 			result = await cursor.fetchall()
 			await cursor.close()
 			await conn.close()

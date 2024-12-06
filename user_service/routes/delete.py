@@ -23,9 +23,10 @@ class RouteHelpersFuncs():
 			password={DatabaseConfig.password} 
 		"""
 		return await psycopg.AsyncConnection.connect(conninfo,**kwargs)
+	@staticmethod
 	async def delete_user_from_db(user_id:str):
 		sql_query = """
-			DELETE * FROM users WHERE id=%s
+			DELETE FROM users WHERE id=%s
 		"""		
 		sql_parameters = (user_id,)
 
