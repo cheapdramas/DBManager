@@ -1,9 +1,10 @@
-from fastapi import APIRouter
 import psycopg
+from fastapi import APIRouter
 from psycopg.rows import dict_row
 from psycopg.connection_async import AsyncConnection
 from config import DatabaseConfig
-
+from models.user import User
+from models.responses import UserInfo
 
 
 
@@ -13,13 +14,15 @@ router = APIRouter()
 
 
 @router.get('/users')
-async def getting_users_route():
-	return str((await RouteHelpersFuncs().get_all_users(),await RouteHelpersFuncs.connect_to_db()))
+async def getting_users_route() -> list[dict] | list:
+	all_users: list[dict|None] = await RouteHelpersFuncs().get_all_users()
+	return all_users 
 
 @router.get('/user')
-async def get_user_info_route(user_id:str):
-	return await RouteHelpersFuncs().get_user_info(user_id)
+async def get_user_info_route(user_id:str,reponse_model=UserInfo):
 
+	user_info:dict = await RouteHelpersFuncs().get_user_info(user_id)
+	return UserInfo(**user_info)
 
 
 

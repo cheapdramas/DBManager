@@ -6,7 +6,7 @@ from config import DatabaseConfig
 router = APIRouter()
 
 @router.delete('/user')
-async def delete_user_route(user_id:str):
+async def delete_user_route(user_id:str) -> None:
 	await RouteHelpersFuncs().delete_user_from_db(user_id)
 
 

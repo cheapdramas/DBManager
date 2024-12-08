@@ -1,6 +1,6 @@
 import bcrypt
 import psycopg
-from fastapi import APIRouter,HTTPException
+from fastapi import APIRouter,HTTPException,status
 from psycopg.rows import dict_row
 from models.user import UserRegister,User,UserLogin
 from models.tokens import AccessTokenPayload
@@ -12,13 +12,8 @@ router = APIRouter()
 
 
 @router.post('/register')
-async def register_user_route(user_info:UserRegister):
-	try:
-		await RouteHelpersFuncs().add_user(user_info)
-
-		return user_info
-	except Exception as e:
-		raise HTTPException(400,detail=str(e))
+async def register_user_route(user_info:UserRegister) -> None:
+	await RouteHelpersFuncs().add_user(user_info)
 		
 @router.post('/login',response_model=TokenInfo)
 async def login_user_route(login_info:UserLogin):
@@ -59,19 +54,24 @@ class RouteHelpersFuncs():
 
 		async with await RouteHelpersFuncs.connect_to_db() as conn:
 			cursor = conn.cursor()
+			try:
+				await cursor.execute(sql_query,params=sql_parameters)
+				await conn.commit()
 
-			await cursor.execute(sql_query,params=sql_parameters)
-			await conn.commit()
-
-			await cursor.close()
-			await conn.close()
+				await cursor.close()
+				await conn.close()
+			except Exception as ex:
+				raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail=str(ex))
 	@staticmethod
 	async def login_user(login_info:UserLogin) ->str:
+		sql_query = """
+			SELECT * FROM users WHERE login = %s
+		"""			
+		sql_parameters = (
+			login_info.login,
+		)		
+
 		async with await RouteHelpersFuncs().connect_to_db(row_factory=dict_row) as conn:
-			sql_query = """
-				SELECT * FROM users WHERE login = %s
-			"""			
-			sql_parameters = (login_info.login,)
 			cursor = conn.cursor()
 
 			await cursor.execute(

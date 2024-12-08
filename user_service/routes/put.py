@@ -7,7 +7,7 @@ from config import DatabaseConfig
 router = APIRouter()
 
 @router.put('/user')
-async def update_user_info_route(user_id:str,user_update:UserUpdate):
+async def update_user_info_route(user_id:str,user_update:UserUpdate) -> None:
 	await RouteHelpersFuncs().update_user(user_id,user_update)
 	
 
@@ -58,7 +58,6 @@ class RouteHelpersFuncs():
 					if index < len(user_update) -1:
 						sql_request+=','
 
-					print(f'CYCLE : \n,{index < len(user_update)-1}')
 				
 				sql_request += f' WHERE id=%s'
 				return sql_request
