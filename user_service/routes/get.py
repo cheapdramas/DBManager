@@ -14,12 +14,12 @@ router = APIRouter()
 
 
 @router.get('/users')
-async def getting_users_route() -> list[dict] | list:
+async def getting_users_route() -> list[User] | list:
 	all_users: list[dict|None] = await RouteHelpersFuncs().get_all_users()
 	return all_users 
 
-@router.get('/user')
-async def get_user_info_route(user_id:str,reponse_model=UserInfo):
+@router.get('/user',response_model=UserInfo)
+async def get_user_info_route(user_id:str):
 
 	user_info:dict = await RouteHelpersFuncs().get_user_info(user_id)
 	return UserInfo(**user_info)
