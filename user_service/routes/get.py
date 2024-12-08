@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 
-@router.get('/users')
+@router.get('/users',response_model=list[User])
 async def getting_users_route() -> list[User] | list:
 	all_users: list[User|None] = await RouteHelpersFuncs().get_all_users()
 	return all_users 
