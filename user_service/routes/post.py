@@ -65,7 +65,6 @@ class RouteHelpersFuncs():
 
 			await cursor.close()
 			await conn.close()
-	#NOT FINISHED
 	@staticmethod
 	async def login_user(login_info:UserLogin) ->str:
 		async with await RouteHelpersFuncs().connect_to_db(row_factory=dict_row) as conn:
