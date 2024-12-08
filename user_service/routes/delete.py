@@ -1,12 +1,18 @@
-from fastapi import APIRouter,HTTPException
-from models.user import UserRegister,User
 import psycopg
+from fastapi import APIRouter,HTTPException,status
+from models.user import UserRegister,User
 from config import DatabaseConfig
-
+from auth import decode_token
+from jwt.exceptions import InvalidTokenError
 router = APIRouter()
 
 @router.delete('/user')
-async def delete_user_route(user_id:str):
+async def delete_user_route(access_token:str) -> None:
+	try:
+		payload = decode_token(access_token)
+	except InvalidTokenError:
+		raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail='Invalid Signature error')
+	user_id = payload['user_id']
 	await RouteHelpersFuncs().delete_user_from_db(user_id)
 
 
