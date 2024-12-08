@@ -3,10 +3,11 @@ import psycopg
 from fastapi import APIRouter,HTTPException,status
 from psycopg.rows import dict_row
 from models.user import UserRegister,User,UserLogin
-from models.tokens import AccessTokenPayload
+from models.tokens import AccessTokenPayload,RefreshTokenPayload
 from models.responses import TokenInfo
 from config import DatabaseConfig,TokenConfig
-from auth import generate_token
+import auth as auth_utils
+from .get import RouteHelpersFuncs as RouteHelpersFuncs_get
 
 router = APIRouter()
 
@@ -18,10 +19,26 @@ async def register_user_route(user_info:UserRegister) -> None:
 @router.post('/login',response_model=TokenInfo)
 async def login_user_route(login_info:UserLogin):
 	
-	access_token = await RouteHelpersFuncs().login_user(login_info)
+	logined_user_info:dict  = await RouteHelpersFuncs().login_user(login_info)
+
+	logined_user_id:str = logined_user_info['id']
+
+	access_token = auth_utils.generate_access_token(
+		payload=AccessTokenPayload(user_id=logined_user_id,**logined_user_info).model_dump()
+	)
+	refresh_token = auth_utils.generate_refresh_token(
+		payload=RefreshTokenPayload(user_id=logined_user_id).model_dump()
+	)
+
+	return TokenInfo(
+		access_token=access_token,
+		refresh_token=refresh_token
+	)
+
+@router.post('/refresh_token',response_model=TokenInfo,response_model_exclude_none=True) #not sure about this endpoint in USER sevice, this is more about auth
+async def refresh_access_token_route(refresh_token:str):
+	access_token = await RouteHelpersFuncs().refresh_access_token(refresh_token)	
 	return TokenInfo(access_token=access_token)
-
-
 
 
 def RouteHelpersFuncs(): #proxy function for accessing class that i wrote below endpoints just because
@@ -63,7 +80,7 @@ class RouteHelpersFuncs():
 			except Exception as ex:
 				raise HTTPException(status_code=status.HTTP_409_CONFLICT,detail=str(ex))
 	@staticmethod
-	async def login_user(login_info:UserLogin) ->str:
+	async def login_user(login_info:UserLogin) ->dict:
 		sql_query = """
 			SELECT * FROM users WHERE login = %s
 		"""			
@@ -84,20 +101,31 @@ class RouteHelpersFuncs():
 			pw_from_db:bytes = user_info_fetch['password']
 
 			if not bcrypt.checkpw(login_info.password.encode(),pw_from_db):
-				raise HTTPException(status_code=404,detail='User not found(wrong password)')
-			
-			access_token = generate_token(
-				payload =AccessTokenPayload(user_id = user_info_fetch['id'],**user_info_fetch).model_dump(),
-			)	
-
-
+				raise HTTPException(status_code=404,detail='User not found(wrong password)')			
 
 
 			await cursor.close()
 			await conn.close()
 
-			return access_token
+			return user_info_fetch
 
 
+	@staticmethod
+	async def refresh_access_token(refresh_token:str) -> str:
+		try:
+			refresh_token_payload =  auth_utils.decode_token(refresh_token)
+			if refresh_token_payload.get('type') != 'refresh':
+				raise HTTPException(status_code=400,detail='Invalid Token Type For Refreshing')
+		except Exception as ex:
+			raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail=str(ex))
+		#if we are here, than our refresh token is valid
 
+		user_info:dict = await RouteHelpersFuncs_get().get_user_info(refresh_token_payload['user_id'])
+		if user_info == None:
+			raise HTTPException(status_code=404,detail='User not found')
 
+		access_payload:dict = AccessTokenPayload(
+			user_id = user_info['id'],
+			**user_info
+		).model_dump()
+		return auth_utils.generate_access_token(access_payload) 

@@ -7,3 +7,5 @@ class AccessTokenPayload(BaseModel):
 	name:str
 	email:str
 
+class RefreshTokenPayload(BaseModel):
+	user_id:str
