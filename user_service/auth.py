@@ -12,6 +12,5 @@ def generate_token(
 	to_encode['exp'] = datetime.utcnow() + exp 
 
 	token = jwt.encode(to_encode,private_key,algorithm)	
-	print(token)
 	return token 
 
