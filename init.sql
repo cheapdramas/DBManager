@@ -4,5 +4,12 @@ CREATE TABLE IF NOT EXISTS users(
 	password bytea NOT NULL,
 	name VARCHAR(60) NOT NULL,
 	email VARCHAR(254) 
+);
+
+CREATE TABLE IF NOT EXISTS databases(
+	id VARCHAR PRIMARY KEY NOT NULL,
+	db_name VARCHAR(40),
+	db_system VARCHAR(40),
+	connection_info JSONB,
+	user_id VARCHAR REFERENCES users(id) ON DELETE CASCADE
 )
-	
