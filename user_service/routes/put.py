@@ -13,7 +13,6 @@ async def update_user_info_route(user_id:str,user_update:UserUpdate) -> None:
 
 
 
-
 def RouteHelpersFuncs(): #proxy function for accessing class that i wrote below endpoints just because
 	return RouteHelpersFuncs()
 class RouteHelpersFuncs():

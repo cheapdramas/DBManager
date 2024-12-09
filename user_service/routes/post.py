@@ -20,7 +20,6 @@ async def register_user_route(user_info:UserRegister) -> None:
 async def login_user_route(login_info:UserLogin):
 	
 	logined_user_info:dict  = await RouteHelpersFuncs().login_user(login_info)
-
 	logined_user_id:str = logined_user_info['id']
 
 	access_token = auth_utils.generate_access_token(

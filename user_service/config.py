@@ -14,8 +14,8 @@ class DatabaseConfig:
 
 class TokenConfig:
 	private_key = (pathlib.Path(__file__).parent / 'certs' /'private.pem').read_text()
-	public_key = (pathlib.Path(__file__).parent / 'certs' /'public.pem').read_text()
-	algorithm = 'RS256'
+	public_key  = (pathlib.Path(__file__).parent / 'certs' /'public.pem').read_text()
+	algorithm   = 'RS256'
 	class AccessToken:
 		expire_min=timedelta(minutes=1)  #3
 	class RefreshToken:
