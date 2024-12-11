@@ -25,7 +25,7 @@ class User(BaseModel):
 	id:str = Field(default_factory=ModelHelpers.generate_random_uuid)
 	login:str
 	password:Annotated[str,AfterValidator(ModelHelpers.hash_password)]
-	name:str #Pidoras Pidorasovich
+	name:str 
 	email:EmailStr|None
 
 
