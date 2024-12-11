@@ -32,7 +32,7 @@ class User(BaseModel):
 class UserRegister(BaseModel):
 	login:str = Field(max_length=50)
 	password:str
-	name:Annotated[str,AfterValidator(ModelHelpers.validate_name)] = 'David David' #Pidoras Pidorasovich
+	name:Annotated[str,AfterValidator(ModelHelpers.validate_name)] = 'David David'
 	email:EmailStr = None
 
 
