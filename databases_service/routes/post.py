@@ -1,23 +1,30 @@
-from fastapi import APIRouter
 import psycopg
-from config import MainDBConfig
-from models.models import DBCreationModel,DBModel
+from psycopg import sql
+from psycopg.rows import dict_row
+from fastapi import APIRouter,HTTPException,status
+from config import MainDBConfig,DBClusterConfig
+from models.models import DBModel,PGRegistrationModel
 
 router = APIRouter()
 
 
-@router.post("/create_db")
-async def db_creation_route(new_db_info: DBCreationModel):
-	await RouteHelperFuncs().create_new_db(new_db_info)
+@router.post('/register_pg')
+async def register_postgres(pginfo:PGRegistrationModel):
+	"""REGISTER NEW DATABASE"""
+	full_info_db = await RouteHelperFuncs().register_pg(pginfo)
 
-	return 'Success!'
+	return full_info_db.id
+
+
+@router.post('/create_pg')
+async def run_postgres(db_id:str):
+	"""CREATING POSTGRES DATABASE (create database ...)"""
+	await RouteHelperFuncs().create_pg(db_id)
+	return 'success!'
+
 
 
 	
-
-
-
-
 
 
 
@@ -29,9 +36,22 @@ class RouteHelperFuncs():
 		DSN = MainDBConfig.DSN 
 		connection = await psycopg.AsyncConnection.connect(DSN,**kwargs)
 		return connection
+	
 	@staticmethod 
-	async def create_new_db(db_info:DBCreationModel):
-		full_db_info = DBModel(**db_info.model_dump())
+	async def connect_to_DBcluster(**kwargs) -> psycopg.connection_async.AsyncConnection:
+		DSN = DBClusterConfig.DSN
+		connection = await psycopg.AsyncConnection.connect(DSN,**kwargs)
+		return connection
+
+
+	@staticmethod 
+	async def register_pg(pginfo:PGRegistrationModel):
+		full_db_info = DBModel(
+			db_name=pginfo.db_name,
+			db_system='postgres',
+			connection_info=pginfo.connection_info.model_dump(),
+			user_id=pginfo.user_id
+		)
 		sql_query = """
 			INSERT INTO databases(
 				id,
@@ -51,9 +71,57 @@ class RouteHelperFuncs():
 			await conn.commit()
 			await cursor.close()
 			await conn.close()
+
+		return full_db_info
 			
 			
+	@staticmethod
+	async def create_pg(pg_id:str):
+		sql_query = """
+			SELECT db_name,connection_info FROM databases WHERE id=%s
+		"""
+		sql_params = (pg_id,)
+
+		async with await RouteHelperFuncs.connect_to_mainDB(row_factory=dict_row) as conn:
+			cursor = conn.cursor()
+			await cursor.execute(sql_query,sql_params)
+			result:dict|None = await cursor.fetchone()
+			if result == None:
+				raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail='Database not found')
+			db_name = result['db_name']
+			connection_info:str = result['connection_info']
+
+
+			await cursor.close()
+			await conn.close()		
+
+		async with await RouteHelperFuncs.connect_to_DBcluster(autocommit=True) as cluster_conn:
+
 		
+
+			cursor = cluster_conn.cursor()
+
+
+			await cursor.execute(
+				sql.SQL('CREATE USER {} WITH ENCRYPTED PASSWORD {}').format(sql.Identifier(connection_info['postgres_user']),connection_info['postgres_password'])
+			
+			)
+
+
+			await cursor.execute(sql.SQL("CREATE DATABASE {} OWNER {}").format(
+					sql.Identifier(db_name),connection_info['postgres_user']
+				)
+			)
+		
+			await cursor.close()
+			await cluster_conn.close()
 		
 
 		
+
+
+
+
+
+		
+
