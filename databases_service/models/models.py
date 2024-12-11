@@ -13,20 +13,22 @@ class ModelDependencies():
 
 
 
-class DBModel(BaseModel): #we will use this model only for appending new databases
+	
+
+
+class DBModel(BaseModel): #Model which represent databases table in our main db
 	id:Annotated[str,Field(default_factory=ModelDependencies.generate_uuid)] 
 	db_name:str
 	db_system:str
 	connection_info:Annotated[dict,AfterValidator(ModelDependencies.convert_to_json)]
 	user_id:str #to which user will it belong
 
-class DBCreationModel(BaseModel):
+class PGConnectionInfoModel(BaseModel):
+	postgres_user:str = 'postgres'
+	postgres_password:str
+	postgres_db:str 
+	postgres_port:int = 5432
+class PGRegistrationModel(BaseModel):
 	db_name:str
-	db_system:str
-	connection_info:dict
 	user_id:str
-	
-
-
-
-
+	connection_info:PGConnectionInfoModel
