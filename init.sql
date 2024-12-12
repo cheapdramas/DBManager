@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS users(
 
 CREATE TABLE IF NOT EXISTS databases(
 	id VARCHAR PRIMARY KEY NOT NULL,
-	db_name VARCHAR(40),
+	db_name VARCHAR(40) UNIQUE,
 	db_system VARCHAR(40),
-	connection_info JSONB,
+	password bytea NOT NULL,
 	user_id VARCHAR REFERENCES users(id) ON DELETE CASCADE
 )

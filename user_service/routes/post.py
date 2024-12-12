@@ -15,6 +15,7 @@ router = APIRouter()
 @router.post('/register')
 async def register_user_route(user_info:UserRegister) -> None:
 	await RouteHelpersFuncs().add_user(user_info)
+	return user_info
 		
 @router.post('/login',response_model=TokenInfo)
 async def login_user_route(login_info:UserLogin):

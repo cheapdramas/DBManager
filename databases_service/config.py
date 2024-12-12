@@ -20,4 +20,6 @@ class DBClusterConfig:
 	DSN      =    f'postgresql://{host}/{database}?user={user}&password={password}'
 
 class TokenConfig:
-	public_key = (pathlib.Path(__file__).parent / 'certs' /'public.pem').read_text
+	public_key = (pathlib.Path(__file__).parent / 'certs' /'public.pem').read_text()
+	algorithm = 'RS256'
+	
