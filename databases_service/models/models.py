@@ -5,14 +5,6 @@ import json
 from enum import Enum
 
 
-
-class ModelDependencies():
-	@staticmethod
-	def generate_uuid() -> str:
-		return str(uuid4())
-
-	
-
 class DBModel(BaseModel): #Model which represent databases table in our main db
 	id:str
 	db_name:str
