@@ -10,7 +10,6 @@ from auth import access_token,generate_uuid
 router = APIRouter()
 
 
-
 @router.post('/register_db')
 async def register_db_route(db_info:DBRegistration):
 	"Register database for user"
@@ -40,30 +39,27 @@ class RouteHelperFuncs():
 	async def register_db(db_info:DBRegistration):
 		db_id = generate_uuid()
 
-		
-		#TODO : somehow add statement that checks count with the same user_id, to prevent situation where user having more than 5 dbs
-		sql_query = """
-			INSERT INTO databases(
-				id,
-				db_name,
-				db_system,
-				password,
-				user_id
-			) 
-			SELECT 
-			
-		"""
-		sql_parameters = [
-			db_id,
-			*db_info.model_dump().values()
-		]
+		sql_query = sql.SQL("""
+			DO $$
+			BEGIN
+				IF (SELECT count(*) FROM databases WHERE user_id = {}) < 5 THEN
+					INSERT INTO databases VALUES({},{},{},{},{});
+				END IF;
+			END$$;	
+		""").format(
+			sql.Literal(db_info.user_id),
+			sql.Literal(db_id),
+			*list(map(lambda v: sql.Literal(v),db_info.model_dump().values()))	
+		)
+
+
+
 		try:
-			async with await RouteHelperFuncs.connect_to_mainDB() as conn:
+			async with await RouteHelperFuncs.connect_to_mainDB(autocommit=True) as conn:
 				cursor = conn.cursor()
 				
-				await cursor.execute(sql_query,sql_parameters)
-				await conn.commit()
-	
+				await cursor.execute(sql_query)
+				
 				await conn.close()
 				await cursor.close()
 		except Exception as ex:
