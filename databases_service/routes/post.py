@@ -14,6 +14,7 @@ router = APIRouter()
 async def register_db_route(db_info:DBRegistration):
 	"Register database for user"
 	await RouteHelperFuncs().register_db(db_info)
+	
 
 	return db_info
 
