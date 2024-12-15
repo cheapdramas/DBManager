@@ -1,5 +1,5 @@
 import psycopg
-from fastapi import APIRouter,HTTPException,status,Depends
+from fastapi import APIRouter,HTTPException
 from psycopg import sql
 from psycopg.rows import dict_row
 from config import MainDBConfig,DBClusterConfig
@@ -11,12 +11,16 @@ router = APIRouter()
 
 
 @router.post('/register_db')
-async def register_db_route(db_info:DBRegistration):
+async def register_db_route(access_token:access_token,db_info:DBRegistration):
 	"Register database for user"
-	await RouteHelperFuncs().register_db(db_info)
-	
+	access_token:dict
+	user_id = access_token['user_id']
 
-	return db_info
+
+	registered_db = await RouteHelperFuncs().register_db(db_info,user_id)
+	print(f'\nRegistered new database! db_name: {db_info.db_name}\n')
+	return {'db_id':registered_db}
+ 
 
 
 
@@ -37,24 +41,20 @@ class RouteHelperFuncs():
 		return connection
 
 	@staticmethod
-	async def register_db(db_info:DBRegistration):
+	async def register_db(db_info:DBRegistration,user_id:str):
 		db_id = generate_uuid()
-
 		sql_query = sql.SQL("""
 			DO $$
 			BEGIN
-				IF (SELECT count(*) FROM databases WHERE user_id = {}) < 5 THEN
-					INSERT INTO databases VALUES({},{},{},{},{});
+				IF (SELECT count(*) FROM databases WHERE user_id = {user_id}) < 5 THEN
+					INSERT INTO databases VALUES({db_id},{},{},{},{user_id});
 				END IF;
 			END$$;	
 		""").format(
-			sql.Literal(db_info.user_id),
-			sql.Literal(db_id),
+			user_id=sql.Literal(user_id),
+			db_id = sql.Literal(db_id),
 			*list(map(lambda v: sql.Literal(v),db_info.model_dump().values()))	
 		)
-
-
-
 		try:
 			async with await RouteHelperFuncs.connect_to_mainDB(autocommit=True) as conn:
 				cursor = conn.cursor()
@@ -63,5 +63,24 @@ class RouteHelperFuncs():
 				
 				await conn.close()
 				await cursor.close()
+
+				return db_id
 		except Exception as ex:
 			raise HTTPException(400,detail=str(ex))
+		
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+		
+
+

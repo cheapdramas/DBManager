@@ -15,9 +15,8 @@ class DBSystemsEnum(str,Enum):
 	mongodb='mongodb'
 
 
+
 class DBRegistration(BaseModel):
 	db_name:str
 	db_system:DBSystemsEnum
 	password:str
-	user_id:str
-
