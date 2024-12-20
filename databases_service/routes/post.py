@@ -12,16 +12,6 @@ from auth import access_token, generate_uuid
 router = APIRouter()
 
 
-# @router.post('/register_db')
-# async def register_db_route(access_token:access_token,db_info:DBRegistration):
-# 	"Register database for user"
-# 	access_token:dict
-# 	user_id = access_token['user_id']
-#
-#
-# 	registered_db = await RouteHelperFuncs().register_db(db_info,user_id)
-# 	print(f'\nRegistered new database! db_name: {db_info.db_name}\n')
-# 	return {'db_id':registered_db}
 
 
 @router.post("/create_db")
@@ -35,10 +25,7 @@ async def create_db_route(access_token: access_token, db_info: DBCreateModel):
     if db_info.db_system == "mongodb":
         pass
 
-@router.post('/test_connect')
-async def connect_test(user:str,password:str,database:str):
-    return str(psycopg.connect(host='postgres',port=5432,password=password,user=user,dbname=database))
-     
+ 
 
 def RouteHelperFuncs():
     return RouteHelperFuncs()
@@ -106,9 +93,6 @@ class RouteHelperFuncs:
             """CREATE DATABASE {db_name} OWNER {db_id};"""
         )
 
-        sql_user_access = sql.SQL("""
-            GRANT CREATE ON DATABASE {db_name} TO {db_id};
-        """)
 
 
 
@@ -123,16 +107,11 @@ class RouteHelperFuncs:
                 db_name=sql.Identifier(db_info.db_name),
                 db_id=db_id
             )
-            sql_user_access=sql_user_access.format(
-                db_name=sql.Identifier(db_info.db_name),
-                db_id=sql.Identifier(db_id)
-            )
 
             #Executing sql queries
             cursor = conn.cursor()
             await cursor.execute(sql_create_user)
             await cursor.execute(sql_create_database)
-            await cursor.execute(sql_user_access)
             
             await cursor.close()
             await conn.close()
