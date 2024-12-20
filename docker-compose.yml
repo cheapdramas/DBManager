@@ -18,6 +18,7 @@ services:
       - ./user_service:/app
     depends_on:
       - postgres
+
   databases_service:
     image: databasesimage
     command: sh -c "uvicorn main:app --host 0.0.0.0"
@@ -30,4 +31,19 @@ services:
       - ./databases_service:/app
     depends_on:
       - postgres
+      - user_service
+
+  gateway:
+    image: gatewayimage
+    command: sh -c "uvicorn main:app --host 0.0.0.0"
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    volumes:
+      - ./gateway:/app
+    depends_on:
+      - postgres
+      - databases_service
       - user_service
